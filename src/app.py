@@ -1,138 +1,116 @@
 """
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
+Flask application for San Cosme Orgánico
+Serves React frontend and API endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for, send_from_directory
+from flask import Flask, send_from_directory, jsonify
 from flask_migrate import Migrate
-from flask_swagger import swagger
-from api.utils import APIException, generate_sitemap
+from flask_cors import CORS
+from api.utils import APIException
 from api.models import db
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
 
-# from models import Person
+# Configuration
+ENV = os.getenv("FLASK_ENV", "production")
+DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
 
-ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
+# Paths - works from any directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIST_DIR = os.path.join(BASE_DIR, "dist")
 
-# Get the absolute path to dist directory
-# This works whether running from src/ or project root
-base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-static_file_dir = os.path.join(base_dir, 'dist')
+# Initialize Flask app
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-# database condiguration
-db_url = os.getenv("DATABASE_URL")
-if db_url is not None:
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url.replace(
-        "postgres://", "postgresql://")
+# CORS
+CORS(app)
+
+# Database configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL.replace("postgres://", "postgresql://")
 else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/test.db"
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-MIGRATE = Migrate(app, db, compare_type=True)
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize database
 db.init_app(app)
+Migrate(app, db, compare_type=True)
 
-# add the admin
+# Setup admin and commands
 setup_admin(app)
-
-# add the admin
 setup_commands(app)
 
-# Add all endpoints form the API with a "api" prefix
-app.register_blueprint(api, url_prefix='/api')
+# Register API blueprint
+app.register_blueprint(api, url_prefix="/api")
 
-# Debug endpoint to check build status
-@app.route('/api/debug/build')
-def debug_build():
-    import json
-    return jsonify({
-        "base_dir": base_dir,
-        "static_file_dir": static_file_dir,
-        "static_dir_exists": os.path.exists(static_file_dir),
-        "index_exists": os.path.isfile(os.path.join(static_file_dir, 'index.html')),
-        "files_in_dist": os.listdir(static_file_dir) if os.path.exists(static_file_dir) else [],
-        "env": ENV
-    })
-
-# Handle/serialize errors like a JSON object
-
-
+# Error handlers
 @app.errorhandler(APIException)
-def handle_invalid_usage(error):
+def handle_api_exception(error):
     return jsonify(error.to_dict()), error.status_code
 
-# generate sitemap with all your endpoints
+@app.errorhandler(404)
+def handle_404(error):
+    if os.path.exists(DIST_DIR):
+        return send_from_directory(DIST_DIR, "index.html")
+    return jsonify({"error": "Not found"}), 404
 
+# Serve static assets (CSS, JS, images) - MUST come before catch-all route
+@app.route("/assets/<path:filename>")
+def serve_assets(filename):
+    """Serve static assets from dist/assets/"""
+    assets_dir = os.path.join(DIST_DIR, "assets")
+    if os.path.isfile(os.path.join(assets_dir, filename)):
+        return send_from_directory(assets_dir, filename)
+    return jsonify({"error": "Asset not found"}), 404
 
-# Serve static files (CSS, JS, images, etc.) - MUST be before generic route
-@app.route('/assets/<path:filename>')
-def serve_static_files(filename):
-    file_path = os.path.join(static_file_dir, 'assets', filename)
-    if os.path.isfile(file_path):
-        response = send_from_directory(os.path.join(static_file_dir, 'assets'), filename)
-        # Set appropriate cache headers for static assets
-        response.cache_control.max_age = 3600
-        return response
-    # If file doesn't exist, return 404
-    return jsonify({"error": "File not found"}), 404
-
-# Serve root-level static files (like favicon)
-@app.route('/4geeks.ico')
+# Serve favicon
+@app.route("/favicon.ico")
+@app.route("/4geeks.ico")
 def serve_favicon():
-    file_path = os.path.join(static_file_dir, '4geeks.ico')
-    if os.path.isfile(file_path):
-        return send_from_directory(static_file_dir, '4geeks.ico')
-    # Fallback: try from public directory if it exists
-    public_icon = os.path.join(base_dir, 'public', '4geeks.ico')
-    if os.path.isfile(public_icon):
-        return send_from_directory(os.path.dirname(public_icon), '4geeks.ico')
-    return jsonify({"error": "Favicon not found"}), 404
+    """Serve favicon"""
+    favicon_path = os.path.join(DIST_DIR, "4geeks.ico")
+    if os.path.isfile(favicon_path):
+        return send_from_directory(DIST_DIR, "4geeks.ico")
+    # Try public directory as fallback
+    public_favicon = os.path.join(BASE_DIR, "public", "4geeks.ico")
+    if os.path.isfile(public_favicon):
+        return send_from_directory(os.path.dirname(public_favicon), "4geeks.ico")
+    return "", 404
 
-@app.route('/')
-def sitemap():
-    if ENV == "development":
-        return generate_sitemap(app)
+# API route (already handled by blueprint, but add explicit check)
+@app.route("/api/<path:path>")
+def api_route(path):
+    """API routes are handled by blueprint"""
+    return jsonify({"error": "API endpoint not found"}), 404
+
+# Serve React app - catch-all for SPA routing
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def serve_react_app(path):
+    """
+    Serve React application.
+    For production: serve index.html from dist/
+    For development: would typically use Vite dev server
+    """
+    # In production, serve built React app
+    index_path = os.path.join(DIST_DIR, "index.html")
     
-    # Debug: log the static file directory
-    print(f"Static file directory: {static_file_dir}")
-    print(f"Directory exists: {os.path.exists(static_file_dir)}")
-    if os.path.exists(static_file_dir):
-        print(f"Files in dist: {os.listdir(static_file_dir)}")
-    
-    index_path = os.path.join(static_file_dir, 'index.html')
     if os.path.isfile(index_path):
-        return send_from_directory(static_file_dir, 'index.html')
-    else:
-        # Return error if index.html doesn't exist
-        return jsonify({
-            "error": "index.html not found",
-            "static_dir": static_file_dir,
-            "exists": os.path.exists(static_file_dir),
-            "files": os.listdir(static_file_dir) if os.path.exists(static_file_dir) else []
-        }), 500
-
-# any other endpoint will try to serve it like a static file or fallback to index.html
-@app.route('/<path:path>', methods=['GET'])
-def serve_any_other_file(path):
-    # Skip API routes - these are handled by the blueprint
-    if path.startswith('api/'):
-        return jsonify({"error": "API endpoint not found"}), 404
+        return send_from_directory(DIST_DIR, "index.html")
     
-    file_path = os.path.join(static_file_dir, path)
-    
-    # If it's a file, serve it
-    if os.path.isfile(file_path):
-        response = send_from_directory(static_file_dir, path)
-        response.cache_control.max_age = 3600  # Cache static files
-        return response
-    
-    # For SPA routes, always return index.html
-    return send_from_directory(static_file_dir, 'index.html')
+    # If index.html doesn't exist, return helpful error
+    return jsonify({
+        "error": "React app not built",
+        "message": "Please run 'npm run build' to build the frontend",
+        "dist_dir": DIST_DIR,
+        "exists": os.path.exists(DIST_DIR)
+    }), 503
 
-
-# this only runs if `$ python src/main.py` is executed
-if __name__ == '__main__':
-    PORT = int(os.environ.get('PORT', 3001))
-    app.run(host='0.0.0.0', port=PORT, debug=True)
+# Run development server
+if __name__ == "__main__":
+    PORT = int(os.environ.get("PORT", 3001))
+    app.run(host="0.0.0.0", port=PORT, debug=DEBUG)
