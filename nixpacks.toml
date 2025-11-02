@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs", "python311", "python311Packages.pip"]
+nixPkgs = ["nodejs", "python311", "python311Packages.pip", "curl"]
 
 [phases.install]
 cmds = [
@@ -14,8 +14,9 @@ cmds = [
     "ls -la dist || echo 'ERROR: dist directory not created!'",
     "ls -la dist/assets 2>/dev/null || echo 'WARNING: assets directory does not exist'",
     "echo '=== Installing Python dependencies ==='",
-    "python3 -m pip install --upgrade pip --break-system-packages",
-    "python3 -m pip install -r requirements.txt --break-system-packages"
+    "curl -sS https://bootstrap.pypa.io/get-pip.py | python3 || echo 'pip already installed'",
+    "python3 -m pip install --upgrade pip --break-system-packages || python3 -m pip install --upgrade pip",
+    "python3 -m pip install -r requirements.txt --break-system-packages || python3 -m pip install -r requirements.txt"
 ]
 
 [start]
