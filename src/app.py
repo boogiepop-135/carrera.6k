@@ -14,8 +14,11 @@ from api.commands import setup_commands
 # from models import Person
 
 ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
-static_file_dir = os.path.join(os.path.dirname(
-    os.path.realpath(__file__)), '../dist/')
+
+# Get the absolute path to dist directory
+# This works whether running from src/ or project root
+base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+static_file_dir = os.path.join(base_dir, 'dist')
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
@@ -39,6 +42,19 @@ setup_commands(app)
 
 # Add all endpoints form the API with a "api" prefix
 app.register_blueprint(api, url_prefix='/api')
+
+# Debug endpoint to check build status
+@app.route('/api/debug/build')
+def debug_build():
+    import json
+    return jsonify({
+        "base_dir": base_dir,
+        "static_file_dir": static_file_dir,
+        "static_dir_exists": os.path.exists(static_file_dir),
+        "index_exists": os.path.isfile(os.path.join(static_file_dir, 'index.html')),
+        "files_in_dist": os.listdir(static_file_dir) if os.path.exists(static_file_dir) else [],
+        "env": ENV
+    })
 
 # Handle/serialize errors like a JSON object
 
@@ -69,7 +85,7 @@ def serve_favicon():
     if os.path.isfile(file_path):
         return send_from_directory(static_file_dir, '4geeks.ico')
     # Fallback: try from public directory if it exists
-    public_icon = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'public', '4geeks.ico')
+    public_icon = os.path.join(base_dir, 'public', '4geeks.ico')
     if os.path.isfile(public_icon):
         return send_from_directory(os.path.dirname(public_icon), '4geeks.ico')
     return jsonify({"error": "Favicon not found"}), 404
