@@ -1,14 +1,210 @@
 <!DOCTYPE html>
-<html class="h-100">
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta charset="UTF-8">
-        <title>Hello Rigo with React + Flux + Context.js</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
-        <link rel="shortcut icon" href="./4geeks.ico"></head>
-    <body class="h-100">
-        <div id="app" class="h-100"></div>
-        <script type="text/javascript" src="./bundle.js"></script>
-    </body>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>San Cosme Orgánico | Restaurante de Comida Orgánica en Querétaro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .hero-section { background: linear-gradient(135deg, #28a745 0%, #84d160 100%); min-height: 90vh; display: flex; align-items: center; color: white; }
+        .hero-title { font-size: 3.5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .hero-subtitle { font-size: 1.8rem; margin: 1.5rem 0; }
+        .btn-custom { padding: 1rem 2rem; font-size: 1.2rem; border-radius: 50px; }
+        .feature-card { padding: 2rem; border-radius: 15px; transition: transform 0.3s; }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 10px 30px rgba(40,167,69,0.2); }
+        .menu-card { border-radius: 20px; overflow: hidden; transition: transform 0.3s; }
+        .menu-card:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,0,0,0.15); }
+        .menu-image { height: 200px; display: flex; align-items: center; justify-content: center; }
+        .section-padding { padding: 5rem 0; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-leaf text-success me-2 fs-4"></i>
+                <span class="fw-bold">San Cosme Orgánico</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#menu">Menú</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#nosotros">Nosotros</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+                    <li class="nav-item ms-3">
+                        <a href="tel:+524429035940" class="btn btn-success rounded-pill px-4">
+                            <i class="fas fa-phone me-2"></i>Reservar
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="inicio" class="hero-section">
+        <div class="container text-center">
+            <h1 class="hero-title">
+                <i class="fas fa-leaf me-3"></i>San Cosme Orgánico
+            </h1>
+            <p class="hero-subtitle">Sabores naturales que nutren tu cuerpo y tu alma</p>
+            <p class="fs-5 mb-5">Descubre la magia de la comida orgánica en el corazón de Querétaro. Cada bocado es una experiencia de frescura y sabor auténtico.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="#menu" class="btn btn-success btn-lg btn-custom shadow-lg">
+                    <i class="fas fa-utensils me-2"></i>Ver Menú
+                </a>
+                <a href="tel:+524429035940" class="btn btn-outline-light btn-lg btn-custom shadow-lg">
+                    <i class="fas fa-phone me-2"></i>Reservar Mesa
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section-padding bg-light">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="feature-card bg-white shadow-sm h-100">
+                        <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+                        <h4 class="fw-bold mb-3">100% Orgánico</h4>
+                        <p class="text-muted">Ingredientes frescos y orgánicos, cultivados con amor y respeto por la naturaleza.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-card bg-white shadow-sm h-100">
+                        <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                        <h4 class="fw-bold mb-3">Saludable y Delicioso</h4>
+                        <p class="text-muted">Cada platillo está diseñado para nutrir tu cuerpo sin sacrificar el sabor excepcional.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-card bg-white shadow-sm h-100">
+                        <i class="fas fa-recycle fa-3x text-info mb-3"></i>
+                        <h4 class="fw-bold mb-3">Sostenible</h4>
+                        <p class="text-muted">Comprometidos con el medio ambiente y prácticas sostenibles en cada aspecto.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu -->
+    <section id="menu" class="section-padding">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-utensils text-success me-3"></i>Nuestro Menú
+                </h2>
+                <p class="lead text-muted">Delicias orgánicas para todos los gustos</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="menu-card card h-100 border-0 shadow-sm">
+                        <div class="menu-image bg-success">
+                            <i class="fas fa-glass-water fa-5x text-white opacity-75"></i>
+                        </div>
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">Smoothies & Jugos Cold Press</h5>
+                            <p class="text-muted">Bebidas refrescantes con superfoods, frutas orgánicas y nutrientes naturales.</p>
+                            <span class="badge bg-success">Refrescante</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="menu-card card h-100 border-0 shadow-sm">
+                        <div class="menu-image bg-warning">
+                            <i class="fas fa-bowl-food fa-5x text-white opacity-75"></i>
+                        </div>
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">Bowls Nutritivos</h5>
+                            <p class="text-muted">Combinaciones perfectas de granos, vegetales y proteínas orgánicas.</p>
+                            <span class="badge bg-warning text-dark">Nutritivo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="menu-card card h-100 border-0 shadow-sm">
+                        <div class="menu-image bg-success">
+                            <i class="fas fa-burger fa-5x text-white opacity-75"></i>
+                        </div>
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">Sándwiches Orgánicos</h5>
+                            <p class="text-muted">Pan artesanal con ingredientes frescos y opciones veganas disponibles.</p>
+                            <span class="badge bg-success">Vegano</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contacto" class="section-padding bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold mb-4">
+                    <i class="fas fa-map-marker-alt text-success me-3"></i>Visítanos
+                </h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                        <i class="fas fa-map-marker-alt fa-3x text-success mb-3"></i>
+                        <h5 class="fw-bold mb-3">Ubicación</h5>
+                        <p class="text-muted">Av. Paseo de La Reforma #145 Int. 1<br>Santiago de Querétaro, Qro. 76146</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                        <i class="fas fa-clock fa-3x text-info mb-3"></i>
+                        <h5 class="fw-bold mb-3">Horario</h5>
+                        <p class="text-muted">Lun - Sáb: 8:00 AM - 10:00 PM<br>Domingo: 8:00 AM - 3:45 PM</p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+                        <i class="fas fa-phone fa-3x text-success mb-3"></i>
+                        <h5 class="fw-bold mb-3">Contacto</h5>
+                        <p class="text-muted">
+                            <a href="tel:+524429035940" class="text-decoration-none text-dark">442 903 5940</a><br>
+                            <a href="tel:+524421430748" class="text-decoration-none text-dark">442 143 0748</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-leaf text-success me-2"></i>San Cosme Orgánico
+                    </h5>
+                    <p class="text-muted">&copy; 2025 San Cosme Orgánico. Todos los derechos reservados.</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="https://www.facebook.com/sancosme.mx" target="_blank" class="text-white">
+                            <i class="fab fa-facebook-f fa-lg"></i>
+                        </a>
+                        <a href="https://www.instagram.com/sancosme.mx" target="_blank" class="text-white">
+                            <i class="fab fa-instagram fa-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="root"></div>
+</body>
 </html>
