@@ -62,11 +62,40 @@ def serve_static_files(filename):
     # If file doesn't exist, return 404
     return jsonify({"error": "File not found"}), 404
 
+# Serve root-level static files (like favicon)
+@app.route('/4geeks.ico')
+def serve_favicon():
+    file_path = os.path.join(static_file_dir, '4geeks.ico')
+    if os.path.isfile(file_path):
+        return send_from_directory(static_file_dir, '4geeks.ico')
+    # Fallback: try from public directory if it exists
+    public_icon = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'public', '4geeks.ico')
+    if os.path.isfile(public_icon):
+        return send_from_directory(os.path.dirname(public_icon), '4geeks.ico')
+    return jsonify({"error": "Favicon not found"}), 404
+
 @app.route('/')
 def sitemap():
     if ENV == "development":
         return generate_sitemap(app)
-    return send_from_directory(static_file_dir, 'index.html')
+    
+    # Debug: log the static file directory
+    print(f"Static file directory: {static_file_dir}")
+    print(f"Directory exists: {os.path.exists(static_file_dir)}")
+    if os.path.exists(static_file_dir):
+        print(f"Files in dist: {os.listdir(static_file_dir)}")
+    
+    index_path = os.path.join(static_file_dir, 'index.html')
+    if os.path.isfile(index_path):
+        return send_from_directory(static_file_dir, 'index.html')
+    else:
+        # Return error if index.html doesn't exist
+        return jsonify({
+            "error": "index.html not found",
+            "static_dir": static_file_dir,
+            "exists": os.path.exists(static_file_dir),
+            "files": os.listdir(static_file_dir) if os.path.exists(static_file_dir) else []
+        }), 500
 
 # any other endpoint will try to serve it like a static file or fallback to index.html
 @app.route('/<path:path>', methods=['GET'])
