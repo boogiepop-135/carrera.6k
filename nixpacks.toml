@@ -14,8 +14,8 @@ cmds = [
     "ls -la dist || echo 'ERROR: dist directory not created!'",
     "ls -la dist/assets 2>/dev/null || echo 'WARNING: assets directory does not exist'",
     "echo '=== Installing Python dependencies ==='",
-    "python3 -m pip install --upgrade pip",
-    "python3 -m pip install -r requirements.txt"
+    "python3 -m pip install --upgrade pip --break-system-packages || python3 -m pip install --upgrade pip",
+    "python3 -m pip install -r requirements.txt --break-system-packages || python3 -m pip install -r requirements.txt"
 ]
 
 [start]
