@@ -113,12 +113,33 @@ def serve_react_app(path):
     if os.path.isfile(index_path):
         return send_from_directory(DIST_DIR, "index.html")
     
-    # If index.html doesn't exist, return helpful error
+    # If index.html doesn't exist, return helpful error with more info
+    import os
+    parent_dir = os.path.dirname(DIST_DIR)
+    dist_contents = []
+    parent_contents = []
+    
+    if os.path.exists(parent_dir):
+        try:
+            parent_contents = os.listdir(parent_dir)
+        except:
+            pass
+    
+    if os.path.exists(DIST_DIR):
+        try:
+            dist_contents = os.listdir(DIST_DIR)
+        except:
+            pass
+    
     return jsonify({
         "error": "React app not built",
         "message": "Please run 'npm run build' to build the frontend",
         "dist_dir": DIST_DIR,
-        "exists": os.path.exists(DIST_DIR)
+        "dist_exists": os.path.exists(DIST_DIR),
+        "dist_contents": dist_contents,
+        "parent_dir": parent_dir,
+        "parent_contents": parent_contents,
+        "current_working_dir": os.getcwd()
     }), 503
 
 # Run development server
