@@ -37,12 +37,25 @@ else:
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize database
-db.init_app(app)
-Migrate(app, db, compare_type=True)
+try:
+    db.init_app(app)
+    Migrate(app, db, compare_type=True)
+except Exception as e:
+    print(f"Warning: Database initialization issue: {e}")
+    # App will still run but database may not work
 
-# Setup admin and commands
-setup_admin(app)
-setup_commands(app)
+# Setup admin and commands (wrap in try-except to prevent crashes)
+try:
+    setup_admin(app)
+except Exception as e:
+    print(f"Warning: Admin setup failed: {e}")
+    # Continue without admin if it fails
+
+try:
+    setup_commands(app)
+except Exception as e:
+    print(f"Warning: Commands setup failed: {e}")
+    # Continue without commands if it fails
 
 # Register API blueprint
 app.register_blueprint(api, url_prefix="/api")
@@ -81,13 +94,7 @@ def serve_favicon():
         return send_from_directory(os.path.dirname(public_favicon), "4geeks.ico")
     return "", 404
 
-# API route (already handled by blueprint, but add explicit check)
-@app.route("/api/<path:path>")
-def api_route(path):
-    """API routes are handled by blueprint"""
-    return jsonify({"error": "API endpoint not found"}), 404
-
-# Serve React app - catch-all for SPA routing
+# Serve React app - catch-all for SPA routing (but NOT /api routes)
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def serve_react_app(path):
@@ -96,6 +103,10 @@ def serve_react_app(path):
     For production: serve index.html from dist/
     For development: would typically use Vite dev server
     """
+    # Skip API routes - they're handled by blueprint
+    if path.startswith("api/"):
+        return jsonify({"error": "API endpoint not found"}), 404
+    
     # In production, serve built React app
     index_path = os.path.join(DIST_DIR, "index.html")
     
