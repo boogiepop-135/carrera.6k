@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["nodejs-18.x", "python311"]
+
+[phases.install]
+cmds = [
+    "npm install",
+    "npm run build",
+    "pip install -r requirements.txt"
+]
+
+[start]
+cmd = "gunicorn wsgi:application --chdir ./src/ --bind 0.0.0.0:$PORT"
+

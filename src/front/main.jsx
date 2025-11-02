@@ -7,12 +7,14 @@ import { StoreProvider } from './hooks/useGlobalReducer';  // Import the StorePr
 import { BackendURL } from './components/BackendURL';
 
 const Main = () => {
+    // Para páginas estáticas, no es necesario el backend URL
+    // Si necesitas el backend, puedes descomentar la validación abajo
+    // if(! import.meta.env.VITE_BACKEND_URL ||  import.meta.env.VITE_BACKEND_URL == "") return (
+    //     <React.StrictMode>
+    //           <BackendURL/ >
+    //     </React.StrictMode>
+    //     );
     
-    if(! import.meta.env.VITE_BACKEND_URL ||  import.meta.env.VITE_BACKEND_URL == "") return (
-        <React.StrictMode>
-              <BackendURL/ >
-        </React.StrictMode>
-        );
     return (
         <React.StrictMode>  
             {/* Provide global state to all components */}
