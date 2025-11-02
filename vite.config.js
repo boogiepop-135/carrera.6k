@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
     plugins: [react()],
+    root: '.',
     server: {
         port: 3000
     },
@@ -12,9 +14,7 @@ export default defineConfig({
         sourcemap: false,
         minify: 'esbuild',
         rollupOptions: {
-            output: {
-                manualChunks: undefined
-            }
+            input: resolve(__dirname, 'index.html')
         }
     }
 })
