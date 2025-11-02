@@ -3,11 +3,17 @@ nixPkgs = ["nodejs", "python311"]
 
 [phases.install]
 cmds = [
+    "echo '=== Installing Node dependencies ==='",
     "npm install",
+    "echo '=== Cleaning dist directory ==='",
     "rm -rf dist || true",
-    "npm run build",
-    "ls -la dist || echo 'dist directory listing:'",
-    "ls -la dist/assets 2>/dev/null || echo 'assets directory does not exist yet'",
+    "echo '=== Running Vite build ==='",
+    "npm run build || (echo 'Build failed!' && exit 1)",
+    "echo '=== Verifying build output ==='",
+    "ls -la || echo 'Current directory listing:'",
+    "ls -la dist || echo 'ERROR: dist directory not created!'",
+    "ls -la dist/assets 2>/dev/null || echo 'WARNING: assets directory does not exist'",
+    "echo '=== Installing Python dependencies ==='",
     "pip install --upgrade pip",
     "pip install -r requirements.txt"
 ]
