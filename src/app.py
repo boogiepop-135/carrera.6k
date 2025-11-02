@@ -17,8 +17,21 @@ ENV = os.getenv("FLASK_ENV", "production")
 DEBUG = os.getenv("FLASK_DEBUG", "0") == "1"
 
 # Paths - works from any directory
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# When running with gunicorn from src/, __file__ is src/app.py
+# So we need to go up one level to get to project root
+_current_file = os.path.abspath(__file__)
+_current_dir = os.path.dirname(_current_file)
+BASE_DIR = os.path.dirname(_current_dir)  # Go up from src/ to project root
 DIST_DIR = os.path.join(BASE_DIR, "dist")
+
+# Debug path information
+print(f"DEBUG: __file__ = {__file__}")
+print(f"DEBUG: _current_file = {_current_file}")
+print(f"DEBUG: _current_dir = {_current_dir}")
+print(f"DEBUG: BASE_DIR = {BASE_DIR}")
+print(f"DEBUG: DIST_DIR = {DIST_DIR}")
+print(f"DEBUG: cwd = {os.getcwd()}")
+print(f"DEBUG: dist exists = {os.path.exists(DIST_DIR)}")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -60,6 +73,26 @@ except Exception as e:
 # Register API blueprint
 app.register_blueprint(api, url_prefix="/api")
 
+# Diagnostic endpoint for debugging
+@app.route("/api/debug")
+def debug_info():
+    """Debug endpoint to check application state"""
+    try:
+        return jsonify({
+            "status": "ok",
+            "dist_dir": DIST_DIR,
+            "dist_exists": os.path.exists(DIST_DIR),
+            "base_dir": BASE_DIR,
+            "current_working_dir": os.getcwd(),
+            "dist_contents": os.listdir(DIST_DIR) if os.path.exists(DIST_DIR) else [],
+            "index_exists": os.path.isfile(os.path.join(DIST_DIR, "index.html")) if DIST_DIR else False
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e)
+        }), 500
+
 # Error handlers
 @app.errorhandler(APIException)
 def handle_api_exception(error):
@@ -75,10 +108,15 @@ def handle_404(error):
 @app.route("/assets/<path:filename>")
 def serve_assets(filename):
     """Serve static assets from dist/assets/"""
-    assets_dir = os.path.join(DIST_DIR, "assets")
-    if os.path.isfile(os.path.join(assets_dir, filename)):
-        return send_from_directory(assets_dir, filename)
-    return jsonify({"error": "Asset not found"}), 404
+    try:
+        assets_dir = os.path.join(DIST_DIR, "assets")
+        file_path = os.path.join(assets_dir, filename)
+        if os.path.isfile(file_path):
+            return send_from_directory(assets_dir, filename)
+        return jsonify({"error": "Asset not found", "filename": filename}), 404
+    except Exception as e:
+        print(f"Error serving asset {filename}: {e}")
+        return jsonify({"error": "Internal server error", "message": str(e)}), 500
 
 # Serve favicon
 @app.route("/favicon.ico")
@@ -103,44 +141,56 @@ def serve_react_app(path):
     For production: serve index.html from dist/
     For development: would typically use Vite dev server
     """
-    # Skip API routes - they're handled by blueprint
-    if path.startswith("api/"):
-        return jsonify({"error": "API endpoint not found"}), 404
+    try:
+        # Skip API routes - they're handled by blueprint
+        if path.startswith("api/"):
+            return jsonify({"error": "API endpoint not found"}), 404
+        
+        # In production, serve built React app
+        index_path = os.path.join(DIST_DIR, "index.html")
+        
+        if os.path.isfile(index_path):
+            return send_from_directory(DIST_DIR, "index.html")
+        
+        # If index.html doesn't exist, return helpful error with more info
+        parent_dir = os.path.dirname(DIST_DIR)
+        dist_contents = []
+        parent_contents = []
+        
+        if os.path.exists(parent_dir):
+            try:
+                parent_contents = os.listdir(parent_dir)
+            except Exception as e:
+                print(f"Error listing parent dir: {e}")
+        
+        if os.path.exists(DIST_DIR):
+            try:
+                dist_contents = os.listdir(DIST_DIR)
+            except Exception as e:
+                print(f"Error listing dist dir: {e}")
+        
+        return jsonify({
+            "error": "React app not built",
+            "message": "Please run 'npm run build' to build the frontend",
+            "dist_dir": DIST_DIR,
+            "dist_exists": os.path.exists(DIST_DIR),
+            "dist_contents": dist_contents,
+            "parent_dir": parent_dir,
+            "parent_contents": parent_contents,
+            "current_working_dir": os.getcwd()
+        }), 503
     
-    # In production, serve built React app
-    index_path = os.path.join(DIST_DIR, "index.html")
-    
-    if os.path.isfile(index_path):
-        return send_from_directory(DIST_DIR, "index.html")
-    
-    # If index.html doesn't exist, return helpful error with more info
-    import os
-    parent_dir = os.path.dirname(DIST_DIR)
-    dist_contents = []
-    parent_contents = []
-    
-    if os.path.exists(parent_dir):
-        try:
-            parent_contents = os.listdir(parent_dir)
-        except:
-            pass
-    
-    if os.path.exists(DIST_DIR):
-        try:
-            dist_contents = os.listdir(DIST_DIR)
-        except:
-            pass
-    
-    return jsonify({
-        "error": "React app not built",
-        "message": "Please run 'npm run build' to build the frontend",
-        "dist_dir": DIST_DIR,
-        "dist_exists": os.path.exists(DIST_DIR),
-        "dist_contents": dist_contents,
-        "parent_dir": parent_dir,
-        "parent_contents": parent_contents,
-        "current_working_dir": os.getcwd()
-    }), 503
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error in serve_react_app: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Internal server error",
+            "message": str(e),
+            "dist_dir": DIST_DIR,
+            "dist_exists": os.path.exists(DIST_DIR) if DIST_DIR else False
+        }), 500
 
 # Run development server
 if __name__ == "__main__":
