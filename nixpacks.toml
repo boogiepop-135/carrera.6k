@@ -6,6 +6,8 @@ cmds = [
     "npm install",
     "rm -rf dist || true",
     "npm run build",
+    "ls -la dist || echo 'dist directory listing:'",
+    "ls -la dist/assets 2>/dev/null || echo 'assets directory does not exist yet'",
     "pip install --upgrade pip",
     "pip install -r requirements.txt"
 ]
