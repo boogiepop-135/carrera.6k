@@ -1,2 +1,2 @@
-release: pipenv run upgrade
-web: gunicorn wsgi --chdir ./src/
+release: pipenv run upgrade || echo "Skip upgrade if pipenv not available"
+web: gunicorn wsgi:application --chdir ./src/ --bind 0.0.0.0:$PORT
